@@ -16,12 +16,8 @@ Data.prototype.stream = function stream() {
     
     // every 1s update this.base and emit fake data
     self.streamTimer = setInterval(function() {
-        var changeBy = faker.random.number(20);
-        var up = !(faker.random.number() % 2);
-        //console.log("%s, %s, %s", self.base, changeBy, up);
-        if (!up) changeBy = (changeBy-changeBy-changeBy);
-        self.emit("data", self.base = (self.base + changeBy));
-    }, 1000);
+        self.emit("data", faker.random.number(3000));
+    }, 3000);
 };
 
 
