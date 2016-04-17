@@ -3,6 +3,7 @@
 /*global Howl*/
 /*global $*/
 
+var clickCount = 0;
 
 
 var Scene = function Scene() {
@@ -42,6 +43,7 @@ Scene.prototype.destroyShape = function destroyShape() {
     self.shape='';
     $("#shape img").attr('src', '/ass/shape1.png');
     $("#shape").off('click');
+    console.log('you destroyed the shape %s times', clickCount+=1);
     socket.emit("response", {id: self.cid});
 };
 

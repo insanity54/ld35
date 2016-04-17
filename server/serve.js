@@ -9,7 +9,7 @@ var Game = require('./game');
 
 var game = new Game();
 
-
+var responseCount=0;
 
 
 
@@ -46,6 +46,7 @@ io.on('connection', function (socket) {
     socket.on("response", function(r) {
         //console.log('got response from %s', socket.id);
         r['player'] = socket.id; // add player ID
+        console.log('processing response for the %s time', responseCount+=1)
         game.processResponse(r, function(err, result) {
             if (err) return socket.emit("result", result);
             socket.emit("result", result);

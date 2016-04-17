@@ -16,6 +16,20 @@ var Game = function() {
     this.challengeRunning = '';
     this.challenges = [];
     return this;
+    
+    /**
+     * self
+     *   challenges: [
+     *     { 
+     *       entries: [
+     *         
+     *       ],
+     *     },
+     *     {
+     *     }
+     *   ]
+     */
+        
 };
 util.inherits(Game, ee);
 
@@ -103,17 +117,36 @@ Game.prototype.processResponse = function processResponse(r, cb) {
     // 1 second after the first response,
     //   choose the entrant with lowest reaction time
     
+    //console.log(self.challenges);
     var challenge = _.find(self.challenges, function(ch) {
         return ch.id == id;
     });
-    if (challenge.winner) return cb(null, {res: 'diss', msg: 'you did not win', err: false});
+    
+    
+    // if there is already a winner, exit
+    if (challenge.winner)
+        return cb(null, {res: 'diss', msg: 'you did not win', err: false});
+    
+    console.log(r.player);
+    console.log(challenge.entries);
+    // if this player has already entered this challenge, exit
+    // this happens when the player clicks the same shape more than once
+    // entries are objects in an array
+    //   ex: [ { player: '/#EczWjmb8lOCkwkhKAAAA', reactionTime: 8947 } ]
+    if (_.find(challenge.entries, function(e) { return _.isMatch(e, {player: r.player }) })) {
+        console.log("!!!   CAUGHT A DOUBLE!");
+        return cb(null, {res: 'idle', 'msg': 'you clicked more than once', err: false});
+    }
+    
+    
+    // add the player's entry to the entries
     challenge.entries.push({player: r.player, reactionTime: moment().diff(challenge.startTime)});
     if (!challenge.firstResponseTime) {
         //console.log("first response at ~%s", moment().format());
         challenge.firstResponseTime = moment();
         self._completeChallenge(challenge);
     }
-    console.log(challenge.entries);
+    
     
     self.on("result", function(res) {
         //console.log('self result res.id=%s, challenge.id=%s', res.id, challenge.id);
