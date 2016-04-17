@@ -46,7 +46,7 @@ Game.prototype._runChallenge = function _runChallenge() {
 
     if (self.isRunning) {
         self.challengeTimer = setTimeout(function() {
-            console.log('timer elapsed isRunning=%s', self.isRunning);
+            //console.log('timer elapsed isRunning=%s', self.isRunning);
         }, faker.random.number(self.challengeMaxDelay));
     }
 
@@ -109,23 +109,23 @@ Game.prototype.processResponse = function processResponse(r, cb) {
     if (challenge.winner) return cb(null, {res: 'diss', msg: 'you did not win', err: false});
     challenge.entries.push({player: r.player, reactionTime: moment().diff(challenge.startTime)});
     if (!challenge.firstResponseTime) {
-        console.log("first response at ~%s", moment().format());
+        //console.log("first response at ~%s", moment().format());
         challenge.firstResponseTime = moment();
         self._completeChallenge(challenge);
     }
     console.log(challenge.entries);
     
     self.on("result", function(res) {
-        console.log('self result res.id=%s, challenge.id=%s', res.id, challenge.id);
+        //console.log('self result res.id=%s, challenge.id=%s', res.id, challenge.id);
         if (res.id !== challenge.id) {
-            console.log('no matching id!');
+            //console.log('no matching id!');
             return;
         }
         if (res.winner) {
-            console.log('already a winner-- %s', res.winner);
+            //console.log('already a winner-- %s', res.winner);
             return cb(null, {res: "diss", msg: "you lost this challenge", err: false});
         }
-        console.log('send some praise');
+        //console.log('send some praise');
         setTimeout(function() {self._runChallenge()}, 0);
         return cb(null, {res: "praise", msg: "you won this challenge", err: false});
     });

@@ -19,12 +19,12 @@ io.on('connection', function (socket) {
     
     
     game.on("creation", function(info) {
-        console.log('creation! %s', info);
+        //console.log('creation! %s', info);
     });
     
     game.on("challenge", function(c) {
         // send only the challenge id 
-        console.log('challenge %s', c.id);
+        //console.log('challenge %s', c.id);
         socket.emit("challenge", {id: c.id});
     });
     
@@ -44,7 +44,7 @@ io.on('connection', function (socket) {
   
     // receiving a response to a challenge
     socket.on("response", function(r) {
-        console.log('got response from %s', socket.id);
+        //console.log('got response from %s', socket.id);
         r['player'] = socket.id; // add player ID
         game.processResponse(r, function(err, result) {
             if (err) return socket.emit("result", result);
@@ -59,7 +59,7 @@ io.on('connection', function (socket) {
   
     
     socket.on("disconnect", function(data) {
-       console.log("%s disconnected socket.id", socket.id); 
+       //console.log("%s disconnected socket.id", socket.id); 
     });
 
 });
