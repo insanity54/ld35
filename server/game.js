@@ -12,7 +12,8 @@ var Game = function() {
     this.startDelay = 5*1000;
     this.isRunning = false;
     this.challengeTimer;
-    this.challengeMaxDelay = 3*1000;
+    this.challengeMaxDelay = 8*1000;
+    this.challengeMaxTime = 3000;
     this.challengeRunning = '';
     this.challenges = [];
     return this;
@@ -54,14 +55,19 @@ Game.prototype.end = function end() {
 
 Game.prototype._runChallenge = function _runChallenge() {
     var self = this;
-    //console.log('game _runnin');
-    // every few seconds, initiate challenge. do this until game is over
-    self.emit("challenge", self._makeChallenge());
+    
+    // every few seconds, initiate challenge.
+    var ch = self._makeChallenge();
+    //console.log(ch);
+    self.emit("challenge", ch);
 
+    // if nobody clicks a shape after a maximum time,
+    // remove the challenge and make a new challenge
     if (self.isRunning) {
         self.challengeTimer = setTimeout(function() {
-            //console.log('timer elapsed isRunning=%s', self.isRunning);
-        }, faker.random.number(self.challengeMaxDelay));
+            self.processResponse({id: ch.id, player: '666'}, function(err, res) { if (err) console.log(err) }); // 666 is shape ID
+            console.log('timer elapsed isRunning=%s', self.isRunning);
+        }, faker.random.number(self.challengeMaxTime));
     }
 
     
@@ -95,10 +101,27 @@ Game.prototype._makeChallenge = function _makeChallenge() {
 Game.prototype._completeChallenge = function _completeChallenge(challenge) {
     var self = this;
     setTimeout(function() {
-        //self.emit("processed", {winner: challenge.winner});
-        //return cb(null, {res: });
+        // self.emit("processed", {winner: challenge.winner});
+        // return cb(null, {res: });
+        // console.log('completing challenge %s', challenge.id);
+    
+        
+        
         self.challengeRunning = '';
+        // send the result of the 
         self.emit("result", {id: challenge.id, winner: challenge.winner});
+        
+        // if the game time has elapsed, dont create more challenges
+        // if there is still time left in the game, queue another challenge
+        if (moment().diff(self.startTime) > self.roundTime) {
+            console.log("    GAME OVER.");
+            console.log();
+        }
+        else {
+            console.log('    another round!');
+            setTimeout(function() {self._runChallenge()}, 0);
+        }
+        
     }, 1000);
 };
 
@@ -110,6 +133,7 @@ Game.prototype.processResponse = function processResponse(r, cb) {
     var self = this;
     var id = r.id || null;
     if (!id) return cb('you did not send an ID', null);
+    if (typeof cb !== 'function') throw new Error('call it correctly! second param must be a callback.');
     
     // get the challenge the response belongs to
     // if winner is already decided, return diss
@@ -121,20 +145,20 @@ Game.prototype.processResponse = function processResponse(r, cb) {
     var challenge = _.find(self.challenges, function(ch) {
         return ch.id == id;
     });
-    
+    if (typeof challenge === 'undefined') throw new Error('brokky! challenge was unddefined');
     
     // if there is already a winner, exit
     if (challenge.winner)
         return cb(null, {res: 'diss', msg: 'you did not win', err: false});
     
-    console.log(r.player);
-    console.log(challenge.entries);
+    //console.log(r.player);
+    //console.log(challenge.entries);
     // if this player has already entered this challenge, exit
     // this happens when the player clicks the same shape more than once
     // entries are objects in an array
     //   ex: [ { player: '/#EczWjmb8lOCkwkhKAAAA', reactionTime: 8947 } ]
     if (_.find(challenge.entries, function(e) { return _.isMatch(e, {player: r.player }) })) {
-        console.log("!!!   CAUGHT A DOUBLE!");
+        //console.log("!!!   CAUGHT A DOUBLE!");
         return cb(null, {res: 'idle', 'msg': 'you clicked more than once', err: false});
     }
     
@@ -148,7 +172,7 @@ Game.prototype.processResponse = function processResponse(r, cb) {
     }
     
     
-    self.on("result", function(res) {
+    self.once("result", function(res) {
         //console.log('self result res.id=%s, challenge.id=%s', res.id, challenge.id);
         if (res.id !== challenge.id) {
             //console.log('no matching id!');
@@ -158,8 +182,8 @@ Game.prototype.processResponse = function processResponse(r, cb) {
             //console.log('already a winner-- %s', res.winner);
             return cb(null, {res: "diss", msg: "you lost this challenge", err: false});
         }
+        
         //console.log('send some praise');
-        setTimeout(function() {self._runChallenge()}, 0);
         return cb(null, {res: "praise", msg: "you won this challenge", err: false});
     });
     

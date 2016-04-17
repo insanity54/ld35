@@ -4,7 +4,7 @@ var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var path = require('path');
 var Game = require('./game');
-
+var ControlFlow = require('./control');
 
 
 var game = new Game();
@@ -46,7 +46,7 @@ io.on('connection', function (socket) {
     socket.on("response", function(r) {
         //console.log('got response from %s', socket.id);
         r['player'] = socket.id; // add player ID
-        console.log('processing response for the %s time', responseCount+=1)
+        //console.log('processing response for the %s time', responseCount+=1)
         game.processResponse(r, function(err, result) {
             if (err) return socket.emit("result", result);
             socket.emit("result", result);
