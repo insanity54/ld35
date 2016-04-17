@@ -3,9 +3,58 @@
 /*global Howl*/
 /*global $*/
 
-console.log('helo world');
+
+
+var Scene = function Scene() {
+    this.s = [];
+    this.cid = '';
+    this.shape = '';
+    return this;
+};
+
+
+Scene.prototype.challenge = function challenge(c) {
+    var self = this;
+    self.cid = c.id;
+    self.createShape(c.shape || 0);
+};
+
+Scene.prototype.createShape = function createShape(n) {
+    // if (this.s.length > 0) {
+    //     var shape = 'shape'+random(2,4);
+    //     this.s.push(shape);
+    // }
+    var self = this;
+    self.shape = 'shape'+(n+2); // human (1) index, + shapes are offset by 1
+    $("#shape img").attr('src', '/ass/'+self.shape+'.png');
+    $("#shape").on('click', function() {
+        sound.play('clicks');
+        return self.destroyShape();
+    });
+};
+
+// $("#shape").on('click', function(e) {
+//     console.log('test click');
+// });
+
+Scene.prototype.destroyShape = function destroyShape() {
+    var self = this;
+    self.shape='';
+    $("#shape img").attr('src', '/ass/shape1.png');
+    $("#shape").off('click');
+    socket.emit("response", {id: self.cid});
+};
+
+
+
+
+
+
+
+//console.log('helo world');
 var socket = io.connect(document.location.hostname);
 var playingClip = '';
+var s = new Scene();
 
 
 console.log(socket);
@@ -14,10 +63,10 @@ socket.on("speech", function(s) {
     speech(s);
 });
 
-socket.on('news', function (data) {
-    console.log(data);
-    socket.emit('my other event', { my: 'data' });
-});
+// socket.on('news', function (data) {
+//     //console.log(data);
+//     socket.emit('my other event', { my: 'data' });
+// });
 
 socket.on("start", function() {
     greeting();
@@ -27,12 +76,20 @@ socket.on("start", function() {
 });
 
 socket.on("challenge", function(c) {
-   challenge(c);
+    console.log('got challenge on the browser');
+    //challenge(c);
+    s.challenge(c);
 });
 
-socket.on("data", function(d) {
-    //console.log(d);
-    //sound.play('click');
+socket.on("result", function(r) {
+    console.log(r);
+    if (r.err) {
+        console.log('there was an error');
+        console.log(r.msg);
+        return;
+    }
+    if (r.res == 'diss') diss();
+    if (r.res == 'praise') praise();
 });
 
 
@@ -129,6 +186,7 @@ const other = [
 ];
 
 
+
 /** random number between x and y */
 var random = function random(x, y) {
     return Math.floor(Math.random() * y) + x;
@@ -149,6 +207,20 @@ var greeting = function greeting() {
 var command = function command() {
     speech(commands[random(0, commands.length-1)]);
     //return p;
+};
+
+/**
+ * the god says a random diss
+ */
+var diss = function diss() {
+    speech(disses[random(0, disses.length-1)]);
+};
+
+/**
+ * the god says a random praise
+ */
+var praise = function praise() {
+    speech(praises[random(0, praises.length-1)]);
 };
 
 
@@ -182,6 +254,9 @@ var speak = function speak(clip) {
     speech(clip);
 
 };
+
+
+
 
 
 

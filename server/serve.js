@@ -3,71 +3,65 @@ var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var path = require('path');
-var Data = require('./data');
 var Game = require('./game');
-var faker = require('faker');
 
 
-var god;
-
-
-// app.get('/', function (req, res) {
-//   res.sendfile(__dirname + '/index.html');
-// });
 
 var game = new Game();
 
-var dats = new Data();
-dats.stream();
+
+
+
 
 io.on('connection', function (socket) {
     var nsps = io.of('/');
     var numPlayers = Object.keys(nsps.connected).length;
     
+    
+    game.on("creation", function(info) {
+        console.log('creation! %s', info);
+    });
+    
+    game.on("challenge", function(c) {
+        // send only the challenge id 
+        console.log('challenge %s', c.id);
+        socket.emit("challenge", {id: c.id});
+    });
+    
     // if the first player has joined, and the game is not started, start.
+    console.log("numplayers=%s, game.isStarted=%s", numPlayers, game.isStarted());
     if (numPlayers == 1 && !game.isStarted()) {
         socket.emit('start');
         game.start();
     }
     
     
+
     
-    // pick a god if none
-    if (!god) god = Object.keys(nsps.connected)[0];
-    //var god = Object.keys(nsps.connected)
+ 
     
-    game.on("challenge", function(c) {
-        // send only the challenge id 
-        socket.emit("challenge", {id: c.id});
-    });
-    
-    socket.emit('news', { hello: 'world' });
+    //socket.emit('news', { hello: 'world' });
   
     // receiving a response to a challenge
     socket.on("response", function(r) {
+        console.log('got response from %s', socket.id);
+        r['player'] = socket.id; // add player ID
         game.processResponse(r, function(err, result) {
-            if (err) return socket.emit("result", {res: result, msg: err, err: true});
-            socket.emit("result", {res: result, msg: result, err: false});
+            if (err) return socket.emit("result", result);
+            socket.emit("result", result);
         });
     });
   
     socket.on("speech", function(s) {
-        console.log('a god says %s', s);
+        //console.log('a god says %s', s);
         socket.broadcast.emit('speech', s); 
     });
   
-    dats.on("data", function(d) {
-        //console.log('datastream -- '+d);
-        socket.emit('data', d); 
-    });
     
     socket.on("disconnect", function(data) {
        console.log("%s disconnected socket.id", socket.id); 
     });
-  
-//   socket.on('my other event', function (data) {
-//     console.log(data);
-//   });
+
 });
 
 

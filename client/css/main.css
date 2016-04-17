@@ -2,6 +2,22 @@ body {
     font: 10px sans-serif;
 }
 
+#scene {
+    clear:both;
+}
+
+#god {
+    float: left;
+}
+
+#shape {
+    float: left;
+}
+
+#chart {
+    display: none;
+}
+
 .axis path,
 .axis line {
     fill: none;
