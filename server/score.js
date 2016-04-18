@@ -5,10 +5,15 @@
  */
 
 
-var Main = function Main() {
+var Score = function Score() {
     this.challenges = [];
+};
+
+Score.prototype.start = function start() {
+    var self = this;
+    return self;
 };
 
 
 
-module.exports = Main;
+module.exports = Score;

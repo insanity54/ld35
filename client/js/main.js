@@ -29,7 +29,8 @@ Scene.prototype.createShape = function createShape(n) {
     self.shape = 'shape'+(n+2); // human (1) index, + shapes are offset by 1
     $("#shape img").attr('src', '/ass/'+self.shape+'.png');
     $("#shape").on('click', function() {
-        sound.play('clicks');
+        playingClip = 'clickecho';
+        sound.play('clickecho');
         return self.destroyShape();
     });
 };
@@ -44,6 +45,7 @@ Scene.prototype.destroyShape = function destroyShape() {
     $("#shape img").attr('src', '/ass/shape1.png');
     $("#shape").off('click');
     console.log('you destroyed the shape %s times', clickCount+=1);
+    console.log(socket);
     socket.emit("response", {id: self.cid});
 };
 
